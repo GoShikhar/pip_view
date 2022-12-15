@@ -56,15 +56,11 @@ class RawPIPViewState extends State<RawPIPView> with TickerProviderStateMixin {
   Widget? _bottomWidgetGhost;
   Map<PIPViewCorner, Offset> _cornerOffsets = {};
   CurveTween? _releaseCurveTween, _toggleCurveTween;
-  GlobalKey? _pipWindowKey;
 
   @override
   void initState() {
     super.initState();
     _corner = widget.initialCorner;
-    if (widget.isFreeFlowing) {
-      _pipWindowKey = GlobalKey();
-    }
     _toggleFloatingAnimationController = AnimationController(
       duration: widget.toggleAnimationDuration,
       vsync: this,
@@ -223,7 +219,6 @@ class RawPIPViewState extends State<RawPIPView> with TickerProviderStateMixin {
             if (bottomWidget != null) bottomWidget,
             if (widget.topWidget != null)
               AnimatedBuilder(
-                key: _pipWindowKey,
                 animation: Listenable.merge([
                   _toggleFloatingAnimationController,
                   _dragAnimationController,
@@ -239,7 +234,7 @@ class RawPIPViewState extends State<RawPIPView> with TickerProviderStateMixin {
                   final floatingOffset = _isDragging
                       ? _dragOffset
                       : Tween<Offset>(
-                          begin: _dragOffset,
+                          begin: widget.isFreeFlowing ? calculatedOffset : _dragOffset,
                           end: calculatedOffset,
                         ).transform(_dragAnimationController.isAnimating ? dragAnimationValue : toggleFloatingAnimationValue);
                   final borderRadius = Tween<double>(
