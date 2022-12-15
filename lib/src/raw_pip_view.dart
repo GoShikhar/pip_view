@@ -14,6 +14,8 @@ class RawPIPView extends StatefulWidget {
   final bool isFreeFlowing;
   final Duration releaseAnimationDuration;
   final Duration toggleAnimationDuration;
+  final EdgeInsetsGeometry? pipWindowContentPadding;
+  final Color pipWindowBackgroundColor;
   // this is exposed because trying to watch onTap event
   // by wrapping the top widget with a gesture detector
   // causes the tap to be lost sometimes because it
@@ -36,6 +38,8 @@ class RawPIPView extends StatefulWidget {
     this.isFreeFlowing = false,
     this.releaseAnimationDuration = const Duration(milliseconds: 300),
     this.toggleAnimationDuration = const Duration(milliseconds: 300),
+    this.pipWindowContentPadding,
+    this.pipWindowBackgroundColor = Colors.transparent,
   }) : super(key: key);
 
   @override
@@ -51,6 +55,7 @@ class RawPIPViewState extends State<RawPIPView> with TickerProviderStateMixin {
   var _isFloating = false;
   Widget? _bottomWidgetGhost;
   Map<PIPViewCorner, Offset> _cornerOffsets = {};
+  CurveTween? _releaseCurveTween, _toggleCurveTween;
 
   @override
   void initState() {
@@ -63,6 +68,13 @@ class RawPIPViewState extends State<RawPIPView> with TickerProviderStateMixin {
     _dragAnimationController = AnimationController(
       duration: widget.releaseAnimationDuration,
       vsync: this,
+    );
+
+    _releaseCurveTween = CurveTween(
+      curve: widget.releaseCurve,
+    );
+    _toggleCurveTween = CurveTween(
+      curve: widget.toggleCurve,
     );
   }
 
@@ -215,14 +227,10 @@ class RawPIPViewState extends State<RawPIPView> with TickerProviderStateMixin {
                   _dragAnimationController,
                 ]),
                 builder: (context, child) {
-                  final dragAnimationValue = CurveTween(
-                    curve: widget.releaseCurve,
-                  ).transform(
+                  final dragAnimationValue = _releaseCurveTween!.transform(
                     _dragAnimationController.value,
                   );
-                  final toggleFloatingAnimationValue = CurveTween(
-                    curve: widget.toggleCurve,
-                  ).transform(
+                  final toggleFloatingAnimationValue = _toggleCurveTween!.transform(
                     _toggleFloatingAnimationController.value,
                   );
 
@@ -260,6 +268,7 @@ class RawPIPViewState extends State<RawPIPView> with TickerProviderStateMixin {
                       child: Material(
                         elevation: 10,
                         borderRadius: BorderRadius.circular(borderRadius),
+                        color: widget.pipWindowBackgroundColor,
                         child: Container(
                           clipBehavior: Clip.antiAlias,
                           decoration: BoxDecoration(
@@ -268,12 +277,15 @@ class RawPIPViewState extends State<RawPIPView> with TickerProviderStateMixin {
                           ),
                           width: width,
                           height: height,
-                          child: Transform.scale(
-                            scale: scale,
-                            child: OverflowBox(
-                              maxHeight: fullWidgetSize.height,
-                              maxWidth: fullWidgetSize.width,
-                              child: child,
+                          child: Padding(
+                            padding: widget.pipWindowContentPadding ?? const EdgeInsets.all(8.0),
+                            child: Transform.scale(
+                              scale: scale,
+                              child: OverflowBox(
+                                maxHeight: fullWidgetSize.height,
+                                maxWidth: fullWidgetSize.width,
+                                child: child,
+                              ),
                             ),
                           ),
                         ),

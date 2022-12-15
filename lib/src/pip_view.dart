@@ -15,6 +15,8 @@ class PIPView extends StatefulWidget {
   final bool isFreeFlowing;
   final Duration releaseAnimationDuration;
   final Duration toggleAnimationDuration;
+  final Padding? pipWindowContentPadding;
+  final Color pipWindowBackgroundColor;
 
   final Widget Function(
     BuildContext context,
@@ -35,6 +37,8 @@ class PIPView extends StatefulWidget {
     this.isFreeFlowing = false,
     this.releaseAnimationDuration = const Duration(milliseconds: 300),
     this.toggleAnimationDuration = const Duration(milliseconds: 300),
+    this.pipWindowContentPadding,
+    this.pipWindowBackgroundColor = Colors.transparent,
   }) : super(key: key);
 
   @override
@@ -87,6 +91,8 @@ class PIPViewState extends State<PIPView> with TickerProviderStateMixin {
       isFreeFlowing: widget.isFreeFlowing,
       releaseAnimationDuration: widget.releaseAnimationDuration,
       toggleAnimationDuration: widget.releaseAnimationDuration,
+      pipWindowContentPadding: widget.pipWindowContentPadding,
+      pipWindowBackgroundColor: widget.pipWindowBackgroundColor,
     );
   }
 }
