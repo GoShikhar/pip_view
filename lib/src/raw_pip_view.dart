@@ -9,6 +9,8 @@ class RawPIPView extends StatefulWidget {
   final bool avoidKeyboard;
   final Widget? topWidget;
   final Widget? bottomWidget;
+  final Curve releaseCurve;
+  final double pipWindowBorderRadius;
   // this is exposed because trying to watch onTap event
   // by wrapping the top widget with a gesture detector
   // causes the tap to be lost sometimes because it
@@ -24,6 +26,8 @@ class RawPIPView extends StatefulWidget {
     this.topWidget,
     this.bottomWidget,
     this.onTapTopWidget,
+    this.releaseCurve = Curves.easeInOutQuad,
+    this.pipWindowBorderRadius = 10,
   }) : super(key: key);
 
   @override
@@ -88,8 +92,7 @@ class RawPIPViewState extends State<RawPIPView> with TickerProviderStateMixin {
   }
 
   bool _isAnimating() {
-    return _toggleFloatingAnimationController.isAnimating ||
-        _dragAnimationController.isAnimating;
+    return _toggleFloatingAnimationController.isAnimating || _dragAnimationController.isAnimating;
   }
 
   void _onPanUpdate(DragUpdateDetails details) {
@@ -173,9 +176,7 @@ class RawPIPViewState extends State<RawPIPView> with TickerProviderStateMixin {
         // BoxFit.cover
         final widthRatio = floatingWidth / width;
         final heightRatio = floatingHeight / height;
-        final scaledDownScale = widthRatio > heightRatio
-            ? floatingWidgetSize.width / fullWidgetSize.width
-            : floatingWidgetSize.height / fullWidgetSize.height;
+        final scaledDownScale = widthRatio > heightRatio ? floatingWidgetSize.width / fullWidgetSize.width : floatingWidgetSize.height / fullWidgetSize.height;
 
         return Stack(
           children: <Widget>[
@@ -188,7 +189,7 @@ class RawPIPViewState extends State<RawPIPView> with TickerProviderStateMixin {
                 ]),
                 builder: (context, child) {
                   final animationCurve = CurveTween(
-                    curve: Curves.easeInOutQuad,
+                    curve: widget.releaseCurve,
                   );
                   final dragAnimationValue = animationCurve.transform(
                     _dragAnimationController.value,
@@ -202,12 +203,10 @@ class RawPIPViewState extends State<RawPIPView> with TickerProviderStateMixin {
                       : Tween<Offset>(
                           begin: _dragOffset,
                           end: calculatedOffset,
-                        ).transform(_dragAnimationController.isAnimating
-                          ? dragAnimationValue
-                          : toggleFloatingAnimationValue);
+                        ).transform(_dragAnimationController.isAnimating ? dragAnimationValue : toggleFloatingAnimationValue);
                   final borderRadius = Tween<double>(
                     begin: 0,
-                    end: 10,
+                    end: widget.pipWindowBorderRadius,
                   ).transform(toggleFloatingAnimationValue);
                   final width = Tween<double>(
                     begin: fullWidgetSize.width,
@@ -313,10 +312,8 @@ Map<PIPViewCorner, Offset> _calculateOffsets({
     final spacing = 16;
     final left = spacing + windowPadding.left;
     final top = spacing + windowPadding.top;
-    final right =
-        spaceSize.width - widgetSize.width - windowPadding.right - spacing;
-    final bottom =
-        spaceSize.height - widgetSize.height - windowPadding.bottom - spacing;
+    final right = spaceSize.width - widgetSize.width - windowPadding.right - spacing;
+    final bottom = spaceSize.height - widgetSize.height - windowPadding.bottom - spacing;
 
     switch (corner) {
       case PIPViewCorner.topLeft:
