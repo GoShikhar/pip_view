@@ -12,6 +12,7 @@ class RawPIPView extends StatefulWidget {
   final Curve releaseCurve;
   final double pipWindowBorderRadius;
   final double pipWindowEdgeSpacing;
+  final bool isFreeFlowing;
   // this is exposed because trying to watch onTap event
   // by wrapping the top widget with a gesture detector
   // causes the tap to be lost sometimes because it
@@ -30,6 +31,7 @@ class RawPIPView extends StatefulWidget {
     this.releaseCurve = Curves.easeInOutQuad,
     this.pipWindowBorderRadius = 10,
     this.pipWindowEdgeSpacing = 16,
+    this.isFreeFlowing = false,
   }) : super(key: key);
 
   @override
@@ -174,7 +176,7 @@ class RawPIPViewState extends State<RawPIPView> with TickerProviderStateMixin {
           windowPadding: windowPadding,
         );
 
-        final calculatedOffset = _cornerOffsets[_corner];
+        final calculatedOffset = widget.isFreeFlowing ? Offset(_cornerOffsets[_corner]!.dx, _dragOffset.dy) : _cornerOffsets[_corner];
 
         // BoxFit.cover
         final widthRatio = floatingWidth / width;
