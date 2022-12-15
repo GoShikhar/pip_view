@@ -15,7 +15,7 @@ class PIPView extends StatefulWidget {
   final bool isFreeFlowing;
   final Duration releaseAnimationDuration;
   final Duration toggleAnimationDuration;
-  final Padding? pipWindowContentPadding;
+  final EdgeInsetsGeometry? pipWindowContentPadding;
   final Color pipWindowBackgroundColor;
 
   final Widget Function(
