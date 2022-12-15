@@ -46,12 +46,6 @@ class RawPIPViewState extends State<RawPIPView> with TickerProviderStateMixin {
   Widget? _bottomWidgetGhost;
   Map<PIPViewCorner, Offset> _cornerOffsets = {};
 
-  //Used for freeFlow anchor type
-  Size? _spaceSize;
-  Size? _widgetSize;
-  EdgeInsets? _windowPadding;
-  Size? _screenSize;
-
   @override
   void initState() {
     super.initState();
@@ -92,15 +86,11 @@ class RawPIPViewState extends State<RawPIPView> with TickerProviderStateMixin {
     required Size widgetSize,
     required EdgeInsets windowPadding,
   }) {
-    //Cache these values for using in freeFlow anchortype
-    _spaceSize = spaceSize;
-    _widgetSize = widgetSize;
-    _windowPadding = windowPadding;
-
-    _cornerOffsets = _calculateCornerOffsets(
+    _cornerOffsets = _calculateOffsets(
       spaceSize: spaceSize,
       widgetSize: widgetSize,
       windowPadding: windowPadding,
+      spacing: widget.pipWindowEdgeSpacing,
     );
   }
 
@@ -152,104 +142,6 @@ class RawPIPViewState extends State<RawPIPView> with TickerProviderStateMixin {
     });
   }
 
-  PIPViewCorner _calculateNearestCorner({
-    required Offset dragOffset,
-    required Map<PIPViewCorner, Offset> cornerOffsets,
-  }) {
-    _CornerDistance calculateDistance(PIPViewCorner corner) {
-      //For freeflow PIP, calculate nearest edge distance
-      if (corner == PIPViewCorner.freeFlow) {
-        final distance = _getFreeFlowOffset(
-          dragOffset: dragOffset,
-          screenSize: _screenSize!,
-        )
-            .translate(
-              -dragOffset.dx,
-              -dragOffset.dy,
-            )
-            .distanceSquared;
-        return _CornerDistance(
-          corner: corner,
-          distance: distance,
-        );
-      }
-
-      final distance = cornerOffsets[corner]!
-          .translate(
-            -dragOffset.dx,
-            -dragOffset.dy,
-          )
-          .distanceSquared;
-
-      return _CornerDistance(
-        corner: corner,
-        distance: distance,
-      );
-    }
-
-    final distances = PIPViewCorner.values.map(calculateDistance).toList();
-
-    distances.sort((cd0, cd1) => cd0.distance.compareTo(cd1.distance));
-
-    return distances.first.corner;
-  }
-
-  Offset _getFreeFlowOffset({
-    required Offset dragOffset,
-    required Size screenSize,
-  }) {
-    final left = widget.pipWindowEdgeSpacing + _windowPadding!.left;
-    final top = widget.pipWindowEdgeSpacing + _windowPadding!.top;
-    final right = _spaceSize!.width - _widgetSize!.width - _windowPadding!.right - widget.pipWindowEdgeSpacing;
-    final bottom = _spaceSize!.height - _widgetSize!.height - _windowPadding!.bottom - widget.pipWindowEdgeSpacing;
-
-    final double yPosition = dragOffset.dy.clamp(bottom, top);
-
-    if (dragOffset.dx < screenSize.width / 2) {
-//move left
-      return Offset(left, yPosition);
-    } else {
-//move right
-      return Offset(right, yPosition);
-    }
-  }
-
-  Map<PIPViewCorner, Offset> _calculateCornerOffsets({
-    required Size spaceSize,
-    required Size widgetSize,
-    required EdgeInsets windowPadding,
-  }) {
-    Offset getOffsetForCorner(PIPViewCorner corner) {
-      final left = widget.pipWindowEdgeSpacing + windowPadding.left;
-      final top = widget.pipWindowEdgeSpacing + windowPadding.top;
-      final right = spaceSize.width - widgetSize.width - windowPadding.right - widget.pipWindowEdgeSpacing;
-      final bottom = spaceSize.height - widgetSize.height - windowPadding.bottom - widget.pipWindowEdgeSpacing;
-
-      switch (corner) {
-        case PIPViewCorner.topLeft:
-          return Offset(left, top);
-        case PIPViewCorner.topRight:
-          return Offset(right, top);
-        case PIPViewCorner.bottomLeft:
-          return Offset(left, bottom);
-        case PIPViewCorner.bottomRight:
-          return Offset(right, bottom);
-        case PIPViewCorner.freeFlow:
-          return Offset.zero;
-        default:
-          throw UnimplementedError();
-      }
-    }
-
-    final corners = PIPViewCorner.values;
-    final Map<PIPViewCorner, Offset> offsets = {};
-    for (final corner in corners) {
-      offsets[corner] = getOffsetForCorner(corner);
-    }
-
-    return offsets;
-  }
-
   @override
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
@@ -257,7 +149,7 @@ class RawPIPViewState extends State<RawPIPView> with TickerProviderStateMixin {
     if (widget.avoidKeyboard) {
       windowPadding += mediaQuery.viewInsets;
     }
-    _screenSize = mediaQuery.size;
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final bottomWidget = widget.bottomWidget ?? _bottomWidgetGhost;
@@ -378,7 +270,6 @@ enum PIPViewCorner {
   topRight,
   bottomLeft,
   bottomRight,
-  freeFlow,
 }
 
 class _CornerDistance {
@@ -389,4 +280,63 @@ class _CornerDistance {
     required this.corner,
     required this.distance,
   });
+}
+
+PIPViewCorner _calculateNearestCorner({
+  required Offset dragOffset,
+  required Map<PIPViewCorner, Offset> cornerOffsets,
+}) {
+  _CornerDistance calculateDistance(PIPViewCorner corner) {
+    final distance = cornerOffsets[corner]!
+        .translate(
+          -dragOffset.dx,
+          -dragOffset.dy,
+        )
+        .distanceSquared;
+    return _CornerDistance(
+      corner: corner,
+      distance: distance,
+    );
+  }
+
+  final distances = PIPViewCorner.values.map(calculateDistance).toList();
+
+  distances.sort((cd0, cd1) => cd0.distance.compareTo(cd1.distance));
+
+  return distances.first.corner;
+}
+
+Map<PIPViewCorner, Offset> _calculateOffsets({
+  required Size spaceSize,
+  required Size widgetSize,
+  required EdgeInsets windowPadding,
+  double spacing = 16,
+}) {
+  Offset getOffsetForCorner(PIPViewCorner corner) {
+    final left = spacing + windowPadding.left;
+    final top = spacing + windowPadding.top;
+    final right = spaceSize.width - widgetSize.width - windowPadding.right - spacing;
+    final bottom = spaceSize.height - widgetSize.height - windowPadding.bottom - spacing;
+
+    switch (corner) {
+      case PIPViewCorner.topLeft:
+        return Offset(left, top);
+      case PIPViewCorner.topRight:
+        return Offset(right, top);
+      case PIPViewCorner.bottomLeft:
+        return Offset(left, bottom);
+      case PIPViewCorner.bottomRight:
+        return Offset(right, bottom);
+      default:
+        throw UnimplementedError();
+    }
+  }
+
+  final corners = PIPViewCorner.values;
+  final Map<PIPViewCorner, Offset> offsets = {};
+  for (final corner in corners) {
+    offsets[corner] = getOffsetForCorner(corner);
+  }
+
+  return offsets;
 }
