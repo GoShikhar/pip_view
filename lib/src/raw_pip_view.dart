@@ -56,11 +56,15 @@ class RawPIPViewState extends State<RawPIPView> with TickerProviderStateMixin {
   Widget? _bottomWidgetGhost;
   Map<PIPViewCorner, Offset> _cornerOffsets = {};
   CurveTween? _releaseCurveTween, _toggleCurveTween;
+  GlobalKey? _pipWindowKey;
 
   @override
   void initState() {
     super.initState();
     _corner = widget.initialCorner;
+    if (widget.isFreeFlowing) {
+      _pipWindowKey = GlobalKey();
+    }
     _toggleFloatingAnimationController = AnimationController(
       duration: widget.toggleAnimationDuration,
       vsync: this,
@@ -155,20 +159,24 @@ class RawPIPViewState extends State<RawPIPView> with TickerProviderStateMixin {
   void _onPanStart(DragStartDetails details) {
     if (_isAnimating()) return;
     setState(() {
-      _dragOffset = widget.isFreeFlowing
-          ? Offset(
-              _cornerOffsets[_corner]!.dx,
-              details.globalPosition.dy
-                  .clamp(
-                    _cornerOffsets[PIPViewCorner.topLeft]!.dy.toDouble(),
-                    _cornerOffsets[PIPViewCorner.bottomLeft]!.dy.toDouble(),
-                  )
-                  .toDouble())
-          : _cornerOffsets[_corner]!;
+      if (widget.isFreeFlowing) {
+        _dragOffset = Offset(
+            calculatedOffset!.dx,
+            (details.globalPosition.dy)
+                .clamp(
+                  _cornerOffsets[PIPViewCorner.topLeft]!.dy.toDouble(),
+                  _cornerOffsets[PIPViewCorner.bottomLeft]!.dy.toDouble(),
+                )
+                .toDouble());
+      } else {
+        _dragOffset = _cornerOffsets[_corner]!;
+      }
+
       _isDragging = true;
     });
   }
 
+  Offset? calculatedOffset;
   @override
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
@@ -201,7 +209,7 @@ class RawPIPViewState extends State<RawPIPView> with TickerProviderStateMixin {
           windowPadding: windowPadding,
         );
 
-        final calculatedOffset = widget.isFreeFlowing
+        calculatedOffset = widget.isFreeFlowing
             ? Offset(
                 _cornerOffsets[_corner]!.dx,
                 _dragOffset.dy
@@ -222,6 +230,7 @@ class RawPIPViewState extends State<RawPIPView> with TickerProviderStateMixin {
             if (bottomWidget != null) bottomWidget,
             if (widget.topWidget != null)
               AnimatedBuilder(
+                key: _pipWindowKey,
                 animation: Listenable.merge([
                   _toggleFloatingAnimationController,
                   _dragAnimationController,
@@ -278,7 +287,7 @@ class RawPIPViewState extends State<RawPIPView> with TickerProviderStateMixin {
                           width: width,
                           height: height,
                           child: Padding(
-                            padding: widget.pipWindowContentPadding ?? const EdgeInsets.all(8.0),
+                            padding: widget.pipWindowContentPadding ?? const EdgeInsets.all(0.0),
                             child: Transform.scale(
                               scale: scale,
                               child: OverflowBox(
