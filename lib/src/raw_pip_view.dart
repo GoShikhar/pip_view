@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'constants.dart';
-
 class RawPIPView extends StatefulWidget {
   final PIPViewCorner initialCorner;
   final double? floatingWidth;
@@ -10,9 +8,12 @@ class RawPIPView extends StatefulWidget {
   final Widget? topWidget;
   final Widget? bottomWidget;
   final Curve releaseCurve;
+  final Curve toggleCurve;
   final double pipWindowBorderRadius;
   final double pipWindowEdgeSpacing;
   final bool isFreeFlowing;
+  final Duration releaseAnimationDuration;
+  final Duration toggleAnimationDuration;
   // this is exposed because trying to watch onTap event
   // by wrapping the top widget with a gesture detector
   // causes the tap to be lost sometimes because it
@@ -29,9 +30,12 @@ class RawPIPView extends StatefulWidget {
     this.bottomWidget,
     this.onTapTopWidget,
     this.releaseCurve = Curves.easeInOutQuad,
+    this.toggleCurve = Curves.easeInOutQuad,
     this.pipWindowBorderRadius = 10,
     this.pipWindowEdgeSpacing = 16,
     this.isFreeFlowing = false,
+    this.releaseAnimationDuration = const Duration(milliseconds: 300),
+    this.toggleAnimationDuration = const Duration(milliseconds: 300),
   }) : super(key: key);
 
   @override
@@ -53,11 +57,11 @@ class RawPIPViewState extends State<RawPIPView> with TickerProviderStateMixin {
     super.initState();
     _corner = widget.initialCorner;
     _toggleFloatingAnimationController = AnimationController(
-      duration: defaultAnimationDuration,
+      duration: widget.toggleAnimationDuration,
       vsync: this,
     );
     _dragAnimationController = AnimationController(
-      duration: defaultAnimationDuration,
+      duration: widget.releaseAnimationDuration,
       vsync: this,
     );
   }
@@ -139,7 +143,16 @@ class RawPIPViewState extends State<RawPIPView> with TickerProviderStateMixin {
   void _onPanStart(DragStartDetails details) {
     if (_isAnimating()) return;
     setState(() {
-      _dragOffset = _cornerOffsets[_corner]!;
+      _dragOffset = widget.isFreeFlowing
+          ? Offset(
+              _cornerOffsets[_corner]!.dx,
+              _dragOffset.dy
+                  .clamp(
+                    _cornerOffsets[PIPViewCorner.topLeft]!.dy.toDouble(),
+                    _cornerOffsets[PIPViewCorner.bottomLeft]!.dy.toDouble(),
+                  )
+                  .toDouble())
+          : _cornerOffsets[_corner]!;
       _isDragging = true;
     });
   }
@@ -176,9 +189,6 @@ class RawPIPViewState extends State<RawPIPView> with TickerProviderStateMixin {
           windowPadding: windowPadding,
         );
 
-        print(_cornerOffsets[PIPViewCorner.topLeft]!.dy.toDouble());
-        print(_cornerOffsets[PIPViewCorner.bottomLeft]!.dy.toDouble());
-
         final calculatedOffset = widget.isFreeFlowing
             ? Offset(
                 _cornerOffsets[_corner]!.dx,
@@ -205,13 +215,14 @@ class RawPIPViewState extends State<RawPIPView> with TickerProviderStateMixin {
                   _dragAnimationController,
                 ]),
                 builder: (context, child) {
-                  final animationCurve = CurveTween(
+                  final dragAnimationValue = CurveTween(
                     curve: widget.releaseCurve,
-                  );
-                  final dragAnimationValue = animationCurve.transform(
+                  ).transform(
                     _dragAnimationController.value,
                   );
-                  final toggleFloatingAnimationValue = animationCurve.transform(
+                  final toggleFloatingAnimationValue = CurveTween(
+                    curve: widget.toggleCurve,
+                  ).transform(
                     _toggleFloatingAnimationController.value,
                   );
 

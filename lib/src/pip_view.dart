@@ -9,9 +9,13 @@ class PIPView extends StatefulWidget {
   final double? floatingHeight;
   final bool avoidKeyboard;
   final Curve releaseCurve;
+  final Curve toggleCurve;
   final double pipWindowBorderRadius;
   final double pipWindowEdgeSpacing;
   final bool isFreeFlowing;
+  final Duration releaseAnimationDuration;
+  final Duration toggleAnimationDuration;
+
   final Widget Function(
     BuildContext context,
     bool isFloating,
@@ -25,9 +29,12 @@ class PIPView extends StatefulWidget {
     this.floatingHeight,
     this.avoidKeyboard = true,
     this.releaseCurve = Curves.easeInOutQuad,
+    this.toggleCurve = Curves.easeInOutQuad,
     this.pipWindowBorderRadius = 10,
     this.pipWindowEdgeSpacing = 16,
     this.isFreeFlowing = false,
+    this.releaseAnimationDuration = const Duration(milliseconds: 300),
+    this.toggleAnimationDuration = const Duration(milliseconds: 300),
   }) : super(key: key);
 
   @override
@@ -74,9 +81,12 @@ class PIPViewState extends State<PIPView> with TickerProviderStateMixin {
       floatingWidth: widget.floatingWidth,
       initialCorner: widget.initialCorner,
       releaseCurve: widget.releaseCurve,
+      toggleCurve: widget.toggleCurve,
       pipWindowBorderRadius: widget.pipWindowBorderRadius,
       pipWindowEdgeSpacing: widget.pipWindowEdgeSpacing,
       isFreeFlowing: widget.isFreeFlowing,
+      releaseAnimationDuration: widget.releaseAnimationDuration,
+      toggleAnimationDuration: widget.releaseAnimationDuration,
     );
   }
 }
