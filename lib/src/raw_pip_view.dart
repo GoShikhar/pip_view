@@ -234,7 +234,7 @@ class RawPIPViewState extends State<RawPIPView> with TickerProviderStateMixin {
                   final floatingOffset = _isDragging
                       ? _dragOffset
                       : Tween<Offset>(
-                          begin: widget.isFreeFlowing ? calculatedOffset : _dragOffset,
+                          begin: _dragOffset,
                           end: calculatedOffset,
                         ).transform(_dragAnimationController.isAnimating ? dragAnimationValue : toggleFloatingAnimationValue);
                   final borderRadius = Tween<double>(
@@ -262,27 +262,29 @@ class RawPIPViewState extends State<RawPIPView> with TickerProviderStateMixin {
                       onPanCancel: _isFloating ? _onPanCancel : null,
                       onPanEnd: _isFloating ? _onPanEnd : null,
                       onTap: widget.onTapTopWidget,
-                      child: Material(
-                        elevation: 10,
-                        borderRadius: BorderRadius.circular(borderRadius),
-                        color: widget.pipWindowBackgroundColor,
-                        child: Container(
-                          clipBehavior: Clip.antiAlias,
-                          decoration: BoxDecoration(
-                            color: Colors.transparent,
-                            borderRadius: BorderRadius.circular(borderRadius),
-                          ),
-                          width: width,
-                          height: height,
-                          child: Padding(
-                            padding: widget.pipWindowContentPadding ?? const EdgeInsets.all(0.0),
-                            child: Transform.scale(
-                              scale: scale,
-                              child: OverflowBox(
-                                maxHeight: fullWidgetSize.height,
-                                maxWidth: fullWidgetSize.width,
-                                child: child,
-                              ),
+                      child: Container(
+                        clipBehavior: Clip.antiAlias,
+                        decoration: BoxDecoration(
+                          color: widget.pipWindowBackgroundColor,
+                          borderRadius: BorderRadius.circular(borderRadius),
+                          boxShadow: [
+                            BoxShadow(
+                              offset: Offset(0, 0),
+                              color: Colors.black54,
+                              blurRadius: 5,
+                            )
+                          ],
+                        ),
+                        width: width,
+                        height: height,
+                        child: Padding(
+                          padding: widget.pipWindowContentPadding ?? const EdgeInsets.all(0.0),
+                          child: Transform.scale(
+                            scale: scale,
+                            child: OverflowBox(
+                              maxHeight: fullWidgetSize.height,
+                              maxWidth: fullWidgetSize.width,
+                              child: child,
                             ),
                           ),
                         ),
