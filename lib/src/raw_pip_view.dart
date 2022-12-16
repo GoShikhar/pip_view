@@ -199,14 +199,16 @@ class RawPIPViewState extends State<RawPIPView> with TickerProviderStateMixin {
         );
 
         calculatedOffset = widget.isFreeFlowing
-            ? Offset(
-                _cornerOffsets[_corner]!.dx,
-                _dragOffset.dy
-                    .clamp(
-                      _cornerOffsets[PIPViewCorner.topLeft]!.dy.toDouble(),
-                      _cornerOffsets[PIPViewCorner.bottomLeft]!.dy.toDouble(),
-                    )
-                    .toDouble())
+            ? _dragOffset == Offset.zero
+                ? _cornerOffsets[_corner]
+                : Offset(
+                    _cornerOffsets[_corner]!.dx,
+                    _dragOffset.dy
+                        .clamp(
+                          _cornerOffsets[PIPViewCorner.topLeft]!.dy.toDouble(),
+                          _cornerOffsets[PIPViewCorner.bottomLeft]!.dy.toDouble(),
+                        )
+                        .toDouble())
             : _cornerOffsets[_corner];
 
         // BoxFit.cover
