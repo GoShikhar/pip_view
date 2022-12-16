@@ -130,7 +130,7 @@ class RawPIPViewState extends State<RawPIPView> with TickerProviderStateMixin {
     if (!_isDragging) return;
     setState(() {
       _dragAnimationController.value = 0;
-      _dragOffset = Offset.zero;
+      //_dragOffset = Offset.zero;
       _isDragging = false;
     });
   }
@@ -148,7 +148,7 @@ class RawPIPViewState extends State<RawPIPView> with TickerProviderStateMixin {
     });
     _dragAnimationController.forward().whenCompleteOrCancel(() {
       _dragAnimationController.value = 0;
-      _dragOffset = Offset.zero;
+      //_dragOffset = Offset.zero;
     });
   }
 
@@ -272,8 +272,8 @@ class RawPIPViewState extends State<RawPIPView> with TickerProviderStateMixin {
                           boxShadow: [
                             BoxShadow(
                               offset: Offset(0, 0),
-                              color: Colors.black54,
-                              blurRadius: 5,
+                              color: Colors.black45,
+                              blurRadius: 10,
                             )
                           ],
                         ),
